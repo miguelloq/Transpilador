@@ -1,0 +1,65 @@
+options {
+  static = true;
+}
+
+PARSER_BEGIN(JavaToDartTranspiler)
+
+import java.io.*;
+import java.util.*;
+
+public class JavaToDartTranspiler {
+  public static void main(String[] args) throws Exception {
+    JavaToDartTranspiler parser = new JavaToDartTranspiler(System.in);
+  }
+}
+
+PARSER_END(JavaToDartTranspiler)
+
+TOKEN : {
+  <IDENTIFIER: (["a"-"z", "A"-"Z"])+(["a"-"z", "A"-"Z", "0"-"9", "_"])*>
+| <INTEGER_LITERAL: (["0"-"9"])+>
+| <STRING_LITERAL: "\"" (~["\""])* "\"">
+| <WHITESPACE: (" " | "\t" | "\r" | "\n")>
+| <IF: "if">
+| <ELSE: "else">
+| <FOR: "for">
+| <WHILE: "while">
+| <RETURN: "return">
+| <VOID: "void">
+| <INT: "int">
+| <STRING: "String">
+| <BOOLEAN: "boolean">
+| <TRUE: "true">
+| <FALSE: "false">
+| <PLUS: "+">
+| <MINUS: "-">
+| <MULTIPLY: "*">
+| <DIVIDE: "/">
+| <MODULO: "%">
+| <AND: "&&">
+| <OR: "||">
+| <EQUALS: "==">
+| <NOT_EQUALS: "!=">
+| <LESS_THAN: "<">
+| <LESS_THAN_EQUALS: "<=">
+| <GREATER_THAN: ">">
+| <GREATER_THAN_EQUALS: ">=">
+| <ASSIGN: "=">
+| <SEMICOLON: ";">
+| <LEFT_BRACE: "{">
+| <RIGHT_BRACE: "}">
+| <LEFT_PAREN: "(">
+| <RIGHT_PAREN: ")">
+| <LEFT_BRACKET: "[">
+| <RIGHT_BRACKET: "]">
+}
+
+void declaration() :
+{}
+{
+  <INT> <IDENTIFIER>
+| <STRING> <IDENTIFIER>
+| <BOOLEAN> <IDENTIFIER>
+}
+
+
