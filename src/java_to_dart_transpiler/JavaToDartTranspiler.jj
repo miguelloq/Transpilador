@@ -23,7 +23,6 @@ TOKEN : {
 | <IF: "if">
 | <ELSE: "else">
 | <FOR: "for">
-| <WHILE: "while">
 | <RETURN: "return">
 | <VOID: "void">
 | <INT: "int">
@@ -57,9 +56,97 @@ TOKEN : {
 void declaration() :
 {}
 {
-  <INT> <IDENTIFIER>
-| <STRING> <IDENTIFIER>
-| <BOOLEAN> <IDENTIFIER>
+  type() <IDENTIFIER> ( <ASSIGN> expression() )? <SEMICOLON>
 }
 
+void type() :
+{}
+{
+  <INT>
+| <STRING>
+| <BOOLEAN>
+}
 
+void expression() :
+{}
+{
+  logicalExpression()
+}
+
+void logicalExpression() :
+{}
+{
+  relationalExpression() ( ( <AND> | <OR> ) relationalExpression() )*
+}
+
+void relationalExpression() :
+{}
+{
+  additiveExpression() ( ( <LESS_THAN> | <LESS_THAN_EQUALS> | <GREATER_THAN> | <GREATER_THAN_EQUALS> | <EQUALS> | <NOT_EQUALS> ) additiveExpression() )*
+}
+
+void additiveExpression() :
+{}
+{
+  multiplicativeExpression() ( ( <PLUS> | <MINUS> ) multiplicativeExpression() )*
+}
+
+void multiplicativeExpression() :
+{}
+{
+  unaryExpression() ( ( <MULTIPLY> | <DIVIDE> | <MODULO> ) unaryExpression() )*
+}
+
+void unaryExpression() :
+{}
+{
+  <PLUS> unaryExpression()
+| <MINUS> unaryExpression()
+| primaryExpression()
+}
+
+void primaryExpression() :
+{}
+{
+  <INTEGER_LITERAL>
+| <STRING_LITERAL>
+| <TRUE>
+| <FALSE>
+| <IDENTIFIER>
+| <LEFT_PAREN> expression() <RIGHT_PAREN>
+}
+
+void ifStatement() :
+{}
+{
+  <IF> <LEFT_PAREN> expression() <RIGHT_PAREN> block() ( <ELSE> block() )?
+}
+
+void block() :
+{}
+{
+  <LEFT_BRACE> statement* <RIGHT_BRACE>
+}
+
+void statement() :
+{}
+{
+  block()
+| ifStatement()
+| forStatement()
+| returnStatement()
+| expression() <SEMICOLON>
+| declaration()
+}
+
+void forStatement() :
+{}
+{
+  <FOR> <LEFT_PAREN> (declaration() | expression() <SEMICOLON>) expression() <SEMICOLON> expression() <RIGHT_PARE> block()
+}
+
+void returnStatement() :
+{}
+{
+  <RETURN> expression() <SEMICOLON>
+}
