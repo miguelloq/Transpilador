@@ -1,0 +1,11 @@
+boolean  booleano= true && false;
+int numero = 3-2;
+int numero2 = 3;
+String stringAleatoria = "abc";
+
+if(true){
+	String nome="Miguel";
+	while(false || 2>1){
+		nome="Savio";
+	}
+}

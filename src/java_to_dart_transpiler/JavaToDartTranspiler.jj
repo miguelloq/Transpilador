@@ -1,152 +1,297 @@
 options {
-  static = true;
+DEBUG_PARSER=true;
 }
 
+
 PARSER_BEGIN(JavaToDartTranspiler)
+package java_to_dart_transpiler;
 
 import java.io.*;
 import java.util.*;
 
 public class JavaToDartTranspiler {
   public static void main(String[] args) throws Exception {
-    JavaToDartTranspiler parser = new JavaToDartTranspiler(System.in);
+    String caminhoDoArquivo = "input.txt";
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(
+                JavaToDartTranspiler.class.getResourceAsStream("/java_to_dart_transpiler/input.txt")))) {
+            String linha;
+            String inputString="";
+            while ((linha = br.readLine()) != null) {
+                inputString+=linha;
+            }
+			StringReader stringReader = new StringReader(inputString);
+			JavaToDartTranspiler parser = new JavaToDartTranspiler(stringReader);
+			String result=parser.codeBlock();
+			System.out.println(result);   		
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+  }
+
+  static HashMap<String, String> symbolTable = new HashMap<>();
+
+  public static void addVariable(String type, String identifier) throws ParseException {
+    if (symbolTable.containsKey(identifier)) {
+      throw new ParseException("Variavel " + identifier + " ja foi declarada.");
+    }
+    symbolTable.put(identifier, type);
+  }
+
+  public static void checkVariable(String identifier) throws ParseException {
+    if (!symbolTable.containsKey(identifier)) {
+      throw new ParseException("Variavel " + identifier + " nao foi declarada.");
+    }
+  }
+
+//  public changeVariable(String type,String identifier) throws ParseException {
+//	checkVariable(identifier);
+//	String typeName = symbolTable.get(identifier);
+//	if(typeName!=type) {
+//		throw new ParseException("Variavel " + identifier + " nao foi declarada.");
+//	}
+// }
+ 
+}
+PARSER_END(JavaToDartTranspiler)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\r"
+| "\n"
+}
+
+TOKEN :
+{
+  < IFSYMBOL : "if" >
+| < ELSESYMBOL : "else" >
+| < FORSYMBOL : "for" >
+| < WHILESYMBOL : "while" >
+| < RETURNSYMBOL : "return" >
+| < VOIDSYMBOL : "void" >
+| < INTSYMBOL : "int" >
+| < STRINGSYMBOL : "String" >
+| < BOOLEAN : "boolean" >
+| < TRUE : "true" >
+| < FALSE : "false" >
+| < PLUS : "+" >
+| < MINUS : "-" >
+| < MULTIPLY : "*" >
+| < DIVIDE : "/" >
+| < MODULO : "%" >
+| < AND : "&&" >
+| < OR : "||" >
+| < EQUALS : "==" >
+| < NOT_EQUALS : "!=" >
+| < LESS_THAN : "<" >
+| < LESS_THAN_EQUALS : "<=" >
+| < GREATER_THAN : ">" >
+| < GREATER_THAN_EQUALS : ">=" >
+| < ASSIGN : "=" >
+| < SEMICOLON : ";" >
+| < LEFT_BRACE : "{" >
+| < RIGHT_BRACE : "}" >
+| < LEFT_PAREN : "(" >
+| < RIGHT_PAREN : ")" >
+| < LEFT_BRACKET : "[" >
+| < RIGHT_BRACKET : "]" >
+| < IDENTIFIER : ([ "a"-"z", "A"-"Z" ])+ ([ "a"-"z", "A"-"Z", "0"-"9", "_" ])* >
+| < INTEGER_LITERAL : ([ "0"-"9" ])+ >
+| < STRING_LITERAL : "\"" (~[ "\"" ])* "\"" >
+}
+
+String type():
+{
+  String code = "";
+}
+{
+  (
+    <INTSYMBOL> {code = "int";}
+  | <STRINGSYMBOL> {code = "String";}
+  | <BOOLEAN> {code = "bool";}
+  )
+  {return code;}
+}
+
+String compareBooleanOperator(): {String code="";} { 
+ (
+   <EQUALS> {code+=token.image;}
+| <NOT_EQUALS> {code+=token.image;}
+| <LESS_THAN> {code+=token.image;}
+| <LESS_THAN_EQUALS> {code+=token.image;}
+| <GREATER_THAN> {code+=token.image;}
+| <GREATER_THAN_EQUALS> {code+=token.image;}
+)
+{return code;}
+}
+
+String algebricOperator(): {String code="";} {
+  (<PLUS> {code+=token.image;}
+| <MINUS> {code+=token.image;}
+| <MULTIPLY> {code+=token.image;}
+| <DIVIDE> {code+=token.image;}
+| <MODULO> {code+=token.image;}
+) {return code; }
+}
+
+String booleanOperator(): {String code="";} { 
+ (
+   <AND> {code+=token.image;}
+| <OR> {code+=token.image;}
+ )
+{return code;}
+}
+
+String compareBoolean():{String code="";}{
+     (
+        <INTEGER_LITERAL> {code += token.image;}
+        compareBooleanOperator(){code+=token.image;}
+        <INTEGER_LITERAL> {code += token.image;}
+        (
+            compareBooleanOperator() {code += " " + token.image + " ";}
+            <INTEGER_LITERAL> {code += token.image;}
+        )*
+    )
+    {return code;}
+}
+
+String booleanRepresentation(): {String code="";}{
+ (
+  	<TRUE> {code="true";}
+ 	|<FALSE> {code="false";}
+ 	|compareBoolean() {code=token.image;}
+ )
+ {return code;}
+}
+
+String booleanExpression(): {String code="",operatorLoop,booLoop;} {
+ (
+        (<TRUE> | <FALSE>) {code+=token.image;}
+        (
+            operatorLoop = booleanOperator() {code += " " + operatorLoop + " ";}
+            booLoop = booleanRepresentation() {code += booLoop;}
+        )*
+    )
+  {
+    return code;
   }
 }
 
-PARSER_END(JavaToDartTranspiler)
-
-TOKEN : {
-  <IDENTIFIER: (["a"-"z", "A"-"Z"])+(["a"-"z", "A"-"Z", "0"-"9", "_"])*>
-| <INTEGER_LITERAL: (["0"-"9"])+>
-| <STRING_LITERAL: "\"" (~["\""])* "\"">
-| <WHITESPACE: (" " | "\t" | "\r" | "\n")>
-| <IF: "if">
-| <ELSE: "else">
-| <FOR: "for">
-| <RETURN: "return">
-| <VOID: "void">
-| <INT: "int">
-| <STRING: "String">
-| <BOOLEAN: "boolean">
-| <TRUE: "true">
-| <FALSE: "false">
-| <PLUS: "+">
-| <MINUS: "-">
-| <MULTIPLY: "*">
-| <DIVIDE: "/">
-| <MODULO: "%">
-| <AND: "&&">
-| <OR: "||">
-| <EQUALS: "==">
-| <NOT_EQUALS: "!=">
-| <LESS_THAN: "<">
-| <LESS_THAN_EQUALS: "<=">
-| <GREATER_THAN: ">">
-| <GREATER_THAN_EQUALS: ">=">
-| <ASSIGN: "=">
-| <SEMICOLON: ";">
-| <LEFT_BRACE: "{">
-| <RIGHT_BRACE: "}">
-| <LEFT_PAREN: "(">
-| <RIGHT_PAREN: ")">
-| <LEFT_BRACKET: "[">
-| <RIGHT_BRACKET: "]">
+String algebricExpression(): {String code="";} {
+    (
+        <INTEGER_LITERAL> {code += token.image;}
+        (
+            algebricOperator() {code += " " + token.image + " ";}
+            <INTEGER_LITERAL> {code += token.image;}
+        )*
+    )
+    {return code;}
 }
 
-void declaration() :
-{}
-{
-  type() <IDENTIFIER> ( <ASSIGN> expression() )? <SEMICOLON>
+String stringExpression(): {String code="";} {
+	(
+        <STRING_LITERAL> {code += token.image;}
+        (
+            <PLUS> {code += " " + token.image + " ";}
+            <STRING_LITERAL> {code += token.image;}
+        )*
+    )
+    {return code;}
 }
 
-void type() :
-{}
+
+String primaryExpression():
+{String code="",ex="";}
 {
-  <INT>
-| <STRING>
-| <BOOLEAN>
+ (   ex = algebricExpression(){code=ex;}
+| ex = booleanExpression() {code=ex;}
+| ex = stringExpression() {code=ex;}
+| <IDENTIFIER> {throw new ParseException("Ba meu errou");}
+) {return code;}
 }
 
-void expression() :
-{}
+String declaration():
 {
-  logicalExpression()
+  String code = "",ex="",typeValue="",id="";
+}
+{
+(  typeValue=type() {code += typeValue + " ";}
+  <IDENTIFIER > {id=token.image;code += token.image;}
+  <ASSIGN> {code += " = ";}
+  ex = primaryExpression() {code += ex;}
+  <SEMICOLON> {code += ";\n";}
+) {
+	addVariable(typeValue,id);
+	
+	return code;
+  }
 }
 
-void logicalExpression() :
-{}
+String atribution(): {String code="",ex="";}
 {
-  relationalExpression() ( ( <AND> | <OR> ) relationalExpression() )*
+  (    <IDENTIFIER> {code+=token.image;}
+ 	<ASSIGN> {code+=token.image;}
+ 	ex = primaryExpression() {code += ex;}
+ 	<SEMICOLON> {code += ";\n";}
+  )
+  {
+	checkVariable
+	return code;
+  }	
 }
 
-void relationalExpression() :
-{}
+String statement():
+{String code="",v="";}
 {
-  additiveExpression() ( ( <LESS_THAN> | <LESS_THAN_EQUALS> | <GREATER_THAN> | <GREATER_THAN_EQUALS> | <EQUALS> | <NOT_EQUALS> ) additiveExpression() )*
+ (
+   v = declaration(){code=v;}
+| v = condition() {code=v;}
+|  v = whileLoop() {code=v;}
+| v = atribution() {code=v;}
+) {return code;}
 }
 
-void additiveExpression() :
-{}
-{
-  multiplicativeExpression() ( ( <PLUS> | <MINUS> ) multiplicativeExpression() )*
+String codeBlock(): {String code="",stats="";}{
+(stats=statement() {code+=stats;})*
+{return code;}
 }
 
-void multiplicativeExpression() :
-{}
-{
-  unaryExpression() ( ( <MULTIPLY> | <DIVIDE> | <MODULO> ) unaryExpression() )*
+String condition():{String code="",block="",boo="",blockElse="";}{
+( <IFSYMBOL> {code+=token.image;}
+<LEFT_PAREN> {code+=token.image;}
+boo = booleanExpression() {code+=boo;}
+<RIGHT_PAREN> {code+=token.image;}
+<LEFT_BRACE> {code+=token.image+"\n ";}
+block=codeBlock() {code+=block;}
+<RIGHT_BRACE> {code+=token.image+"\n";}
+(
+  <ELSESYMBOL> {code+=token.image;}
+  <LEFT_BRACE> {code+=token.image+"\n ";}
+	blockElse=codeBlock() {code+=blockElse;}
+	<RIGHT_BRACE> {code+=token.image+"\n";})?
+) {return code;}
 }
 
-void unaryExpression() :
-{}
-{
-  <PLUS> unaryExpression()
-| <MINUS> unaryExpression()
-| primaryExpression()
-}
+//String forLoop(): {String code,block,dec,boo;} {
+//<FORSYMBOL>{code+=token.image;}
+//<LEFT_PAREN>{code+=token.image;}
+//dec = declaration() {code+=dec;}
+//(
+// boo=booleanExpression() {code+=boo;}
+// <SEMICOLON> {code += ";";}
+//)
+//
+//}
 
-void primaryExpression() :
-{}
-{
-  <INTEGER_LITERAL>
-| <STRING_LITERAL>
-| <TRUE>
-| <FALSE>
-| <IDENTIFIER>
-| <LEFT_PAREN> expression() <RIGHT_PAREN>
-}
-
-void ifStatement() :
-{}
-{
-  <IF> <LEFT_PAREN> expression() <RIGHT_PAREN> block() ( <ELSE> block() )?
-}
-
-void block() :
-{}
-{
-  <LEFT_BRACE> statement* <RIGHT_BRACE>
-}
-
-void statement() :
-{}
-{
-  block()
-| ifStatement()
-| forStatement()
-| returnStatement()
-| expression() <SEMICOLON>
-| declaration()
-}
-
-void forStatement() :
-{}
-{
-  <FOR> <LEFT_PAREN> (declaration() | expression() <SEMICOLON>) expression() <SEMICOLON> expression() <RIGHT_PARE> block()
-}
-
-void returnStatement() :
-{}
-{
-  <RETURN> expression() <SEMICOLON>
+String whileLoop(): {String code="",block="",boo="",blockElse="";} {
+(
+ <WHILESYMBOL> {code+=token.image;}
+<LEFT_PAREN> {code+=token.image;}
+boo = booleanExpression() {code+=boo;}
+<RIGHT_PAREN> {code+=token.image;}
+<LEFT_BRACE> {code+=token.image+"\n ";}
+block=codeBlock() {code+=block;}
+<RIGHT_BRACE> {code+=token.image+"\n";}
+) {return code;}
 }
