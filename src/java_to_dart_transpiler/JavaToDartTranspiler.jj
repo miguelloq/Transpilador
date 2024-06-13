@@ -239,19 +239,22 @@ String possibleId=null;
 String declaration():
 {
   String code = "",typeValue="",id="";
-  String[] ex;
+  String[] ex=null;
 }
 {
 (  typeValue=type() {code += typeValue + " ";}
   <IDENTIFIER > {id=token.image;code += token.image;}
-  <ASSIGN> {code += " = ";}
-  ex = primaryExpression() {code += ex[0];}
+  (    <ASSIGN> {code += " = ";}
+    ex = primaryExpression() {code += ex[0];}
+  )?
   <SEMICOLON> {code += ";\n";}
 ) {
 	addVariable(typeValue,id);
-	String exType = ex[1];
-	if(typeValue!=exType && exType!="function") {
-	 throw new ParseException("A variavel com nome " + id + " foi declarada como sendo do tipo " + typeValue + " mas a expression declarada foi do tipo " + exType);
+	if(ex!=null){
+		String exType = ex[1];
+	    if(typeValue!=exType && exType!="function") {
+	    	throw new ParseException("A variavel com nome " + id + " foi declarada como sendo do tipo " + typeValue + " mas a expression declarada foi do tipo " + exType);
+		}
 	}
 	return code;
   }
@@ -293,6 +296,10 @@ String statement():
 |  v = whileLoop() {code=v;}
 | v = atribution() {code=v;}
 |  v = printStatement() {code=v;}
+| (
+	<READ> {v="stdin.readLineSync()";}
+	<SEMICOLON> {v+=";\n";}
+  ) {code=v;}
 ) {return code;}
 }
 

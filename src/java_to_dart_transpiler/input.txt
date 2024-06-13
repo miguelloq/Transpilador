@@ -1,7 +1,15 @@
 boolean  booleano= true || false && 2>3<3 || 3<5;
+
 int numero = 3-2;
 int numero2 = 3;
+
 String stringAleatoria = "abc" + "defg";
+String nomeNaoIniciado;
+
+nomeNaoIniciado="dasda";
+
+newScanner(System.in).next();
+System.out.println("ola1");
 
 if(true){
 	String nomeUsuario="Miguel";
@@ -12,5 +20,5 @@ if(true){
 			nomeUsuario="Gustavo";
 		}	
 	}	
-	System.out.println("ola");
+	System.out.println("ola2");
 }
