@@ -20,7 +20,7 @@ public class JavaToDartTranspiler implements JavaToDartTranspilerConstants {
                         JavaToDartTranspiler parser = new JavaToDartTranspiler(stringReader);
                         String result=parser.codeBlock();
 
-            System.out.println(result);
+            System.out.println("\n"+result);
             BufferedWriter writer =  new BufferedWriter(new FileWriter("src/java_to_dart_transpiler/output.txt"));
             writer.write(result);
             writer.close();
@@ -39,10 +39,11 @@ public class JavaToDartTranspiler implements JavaToDartTranspilerConstants {
     symbolTable.put(identifier, type);
   }
 
-  public static void checkVariable(String identifier) throws ParseException {
+  public static String checkVariableAndReturnType(String identifier) throws ParseException {
     if (!symbolTable.containsKey(identifier)) {
       throw new ParseException("Variavel " + identifier + " nao foi declarada.");
     }
+    return symbolTable.get(identifier);
   }
 
   static final public String type() throws ParseException {
@@ -200,7 +201,7 @@ String code="";
       jj_consume_token(INTEGER_LITERAL);
 code += token.image;
       compareBooleanOperator();
-code+=token.image;
+code+= " " + token.image + " ";
       jj_consume_token(INTEGER_LITERAL);
 code += token.image;
       label_1:
@@ -234,7 +235,7 @@ code += token.image;
   static final public String booleanRepresentation() throws ParseException {
     trace_call("booleanRepresentation");
     try {
-String code="";
+String code="",compare="";
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case TRUE:{
         jj_consume_token(TRUE);
@@ -247,8 +248,8 @@ code="false";
         break;
         }
       case INTEGER_LITERAL:{
-        compareBoolean();
-code=token.image;
+        compare = compareBoolean();
+code=compare;
         break;
         }
       default:
@@ -381,36 +382,37 @@ code+="stdin.readLineSync()";
     }
 }
 
-  static final public String primaryExpression() throws ParseException {
+  static final public String[] primaryExpression() throws ParseException {
     trace_call("primaryExpression");
     try {
 String code="",ex="";
-boolean isId =false;
+String exType="";
+String possibleId=null;
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case INTEGER_LITERAL:{
         ex = algebricExpression();
-code=ex;
+code=ex;exType="int";
         break;
         }
       case TRUE:
       case FALSE:{
         ex = booleanExpression();
-code=ex;
+code=ex;exType="bool";
         break;
         }
       case STRING_LITERAL:{
         ex = stringExpression();
-code=ex;
+code=ex;exType="String";
         break;
         }
       case READ:{
         ex = functionExpression();
-code=ex;
+code=ex;exType="function";
         break;
         }
       case IDENTIFIER:{
         jj_consume_token(IDENTIFIER);
-ex=token.image;code=ex;isId=true;
+code=token.image;possibleId=token.image;
         break;
         }
       default:
@@ -418,10 +420,12 @@ ex=token.image;code=ex;isId=true;
         jj_consume_token(-1);
         throw new ParseException();
       }
-if(isId) {
-        checkVariable(ex);
+if(possibleId!=null) {
+        String idType = checkVariableAndReturnType(possibleId);
+        exType = idType;
   }
-  {if ("" != null) return code;}
+  String[] arr = {code,exType};
+  {if ("" != null) return arr;}
     throw new Error("Missing return statement in function");
     } finally {
       trace_return("primaryExpression");
@@ -431,7 +435,8 @@ if(isId) {
   static final public String declaration() throws ParseException {
     trace_call("declaration");
     try {
-String code = "",ex="",typeValue="",id="";
+String code = "",typeValue="",id="";
+  String[] ex;
       typeValue = type();
 code += typeValue + " ";
       jj_consume_token(IDENTIFIER);
@@ -439,11 +444,14 @@ id=token.image;code += token.image;
       jj_consume_token(ASSIGN);
 code += " = ";
       ex = primaryExpression();
-code += ex;
+code += ex[0];
       jj_consume_token(SEMICOLON);
 code += ";\n";
 addVariable(typeValue,id);
-
+        String exType = ex[1];
+        if(typeValue!=exType && exType!="function") {
+         {if (true) throw new ParseException("A variavel com nome " + id + " foi declarada como sendo do tipo " + typeValue + " mas a expression declarada foi do tipo " + exType);}
+        }
         {if ("" != null) return code;}
     throw new Error("Missing return statement in function");
     } finally {
@@ -454,16 +462,20 @@ addVariable(typeValue,id);
   static final public String atribution() throws ParseException {
     trace_call("atribution");
     try {
-String code="",ex="";
+String code="",id="";String[] ex;
       jj_consume_token(IDENTIFIER);
-code+=token.image;
+code+=token.image;id=token.image;
       jj_consume_token(ASSIGN);
 code+=token.image;
       ex = primaryExpression();
-code += ex;
+code += ex[0];
       jj_consume_token(SEMICOLON);
 code += ";\n";
-//checkVariable
+String idType = checkVariableAndReturnType(id);
+        String exType = ex[1];
+        if(idType!=exType && exType!="function") {
+         {if (true) throw new ParseException("Tentou atribuir um valor do tipo " + exType + " para a variavel de nome " + id + " que foi declarada como sendo do tipo " + idType);}
+        }
         {if ("" != null) return code;}
     throw new Error("Missing return statement in function");
     } finally {
@@ -474,13 +486,13 @@ code += ";\n";
   static final public String printStatement() throws ParseException {
     trace_call("printStatement");
     try {
-String code="",ex="";
+String code="";String[] ex;
       jj_consume_token(PRINT);
 code+="print";
       jj_consume_token(LEFT_PAREN);
 code+=token.image;
       ex = primaryExpression();
-code+=ex;
+code+=ex[0];
       jj_consume_token(RIGHT_PAREN);
 code+=token.image;
       jj_consume_token(SEMICOLON);
@@ -580,7 +592,7 @@ code+=boo;
       jj_consume_token(RIGHT_PAREN);
 code+=token.image;
       jj_consume_token(LEFT_BRACE);
-code+=token.image+"\n ";
+code+=token.image+"\n";
       block = codeBlock();
 code+=block;
       jj_consume_token(RIGHT_BRACE);
@@ -590,7 +602,7 @@ code+=token.image+"\n";
         jj_consume_token(ELSESYMBOL);
 code+=token.image;
         jj_consume_token(LEFT_BRACE);
-code+=token.image+"\n ";
+code+=token.image+"\n";
         blockElse = codeBlock();
 code+=blockElse;
         jj_consume_token(RIGHT_BRACE);
@@ -632,7 +644,7 @@ code+=boo;
       jj_consume_token(RIGHT_PAREN);
 code+=token.image;
       jj_consume_token(LEFT_BRACE);
-code+=token.image+"\n ";
+code+=token.image+"\n";
       block = codeBlock();
 code+=block;
       jj_consume_token(RIGHT_BRACE);

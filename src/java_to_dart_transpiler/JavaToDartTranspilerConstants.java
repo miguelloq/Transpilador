@@ -95,7 +95,7 @@ public interface JavaToDartTranspilerConstants {
     "\"\\t\"",
     "\"\\r\"",
     "\"\\n\"",
-    "\"newScanner(System.in).nextInt()\"",
+    "\"newScanner(System.in).next()\"",
     "\"System.out.println\"",
     "\"if\"",
     "\"else\"",

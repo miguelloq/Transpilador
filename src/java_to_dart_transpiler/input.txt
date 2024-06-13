@@ -1,13 +1,16 @@
-boolean  booleano= true && false;
+boolean  booleano= true || false && 2>3<3 || 3<5;
 int numero = 3-2;
 int numero2 = 3;
-String stringAleatoria = "abc";
+String stringAleatoria = "abc" + "defg";
 
 if(true){
-	String nome="Miguel";
-	int input = newScanner(System.in).nextInt();
+	String nomeUsuario="Miguel";
+	int input = newScanner(System.in).next();
 	while(false || 2>1){
-		nome="Savio";
-	}
-	System.out.println(2);
+		nomeUsuario="Savio";
+		if(true){
+			nomeUsuario="Gustavo";
+		}	
+	}	
+	System.out.println("ola");
 }

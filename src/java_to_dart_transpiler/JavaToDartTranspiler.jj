@@ -24,7 +24,7 @@ public class JavaToDartTranspiler {
 			JavaToDartTranspiler parser = new JavaToDartTranspiler(stringReader);
 			String result=parser.codeBlock();
 			
-            System.out.println(result);
+            System.out.println("\n"+result);
             BufferedWriter writer =  new BufferedWriter(new FileWriter("src/java_to_dart_transpiler/output.txt")); 
             writer.write(result);
             writer.close();
@@ -43,10 +43,11 @@ public class JavaToDartTranspiler {
     symbolTable.put(identifier, type);
   }
 
-  public static void checkVariable(String identifier) throws ParseException {
+  public static String checkVariableAndReturnType(String identifier) throws ParseException {
     if (!symbolTable.containsKey(identifier)) {
       throw new ParseException("Variavel " + identifier + " nao foi declarada.");
     }
+    return symbolTable.get(identifier);
   }
 
 //  public changeVariable(String type,String identifier) throws ParseException {
@@ -70,7 +71,7 @@ SKIP :
 
 TOKEN :
 {
-<READ : "newScanner(System.in).nextInt()">
+<READ : "newScanner(System.in).next()">
 | < PRINT : "System.out.println">
 | < IFSYMBOL : "if" >
 | < ELSESYMBOL : "else" >
@@ -154,7 +155,7 @@ String booleanOperator(): {String code="";} {
 String compareBoolean():{String code="";}{
      (
         <INTEGER_LITERAL> {code += token.image;}
-        compareBooleanOperator(){code+=token.image;}
+        compareBooleanOperator(){code+= " " + token.image + " ";}
         <INTEGER_LITERAL> {code += token.image;}
         (
             compareBooleanOperator() {code += " " + token.image + " ";}
@@ -164,11 +165,11 @@ String compareBoolean():{String code="";}{
     {return code;}
 }
 
-String booleanRepresentation(): {String code="";}{
+String booleanRepresentation(): {String code="",compare="";}{
  (
   	<TRUE> {code="true";}
  	|<FALSE> {code="false";}
- 	|compareBoolean() {code=token.image;}
+ 	|compare = compareBoolean() {code=compare;}
  )
  {return code;}
 }
@@ -215,58 +216,69 @@ String functionExpression(): {String code="";} {
 { return code;}
 }
 
-String primaryExpression():
+String[] primaryExpression():
 {String code="",ex="";
-boolean isId =false;
+String exType="";
+String possibleId=null;
 }
 {
- (   ex = algebricExpression(){code=ex;}
-| ex = booleanExpression() {code=ex;}
-| ex = stringExpression() {code=ex;}
-| ex = functionExpression() {code=ex;}
-| <IDENTIFIER> {ex=token.image;code=ex;isId=true;}
+ (   ex = algebricExpression(){code=ex;exType="int";}
+| ex = booleanExpression() {code=ex;exType="bool";}
+| ex = stringExpression() {code=ex;exType="String";}
+| ex = functionExpression() {code=ex;exType="function";}
+| <IDENTIFIER> {code=token.image;possibleId=token.image;}
 ) {
-  if(isId) {
-	checkVariable(ex);
-  } 
-  return code;}
+  if(possibleId!=null) {
+	String idType = checkVariableAndReturnType(possibleId);
+	exType = idType;
+  }
+  String[] arr = {code,exType};
+  return arr;}
 }
 
 String declaration():
 {
-  String code = "",ex="",typeValue="",id="";
+  String code = "",typeValue="",id="";
+  String[] ex;
 }
 {
 (  typeValue=type() {code += typeValue + " ";}
   <IDENTIFIER > {id=token.image;code += token.image;}
   <ASSIGN> {code += " = ";}
-  ex = primaryExpression() {code += ex;}
+  ex = primaryExpression() {code += ex[0];}
   <SEMICOLON> {code += ";\n";}
 ) {
 	addVariable(typeValue,id);
-	
+	String exType = ex[1];
+	if(typeValue!=exType && exType!="function") {
+	 throw new ParseException("A variavel com nome " + id + " foi declarada como sendo do tipo " + typeValue + " mas a expression declarada foi do tipo " + exType);
+	}
 	return code;
   }
 }
 
-String atribution(): {String code="",ex="";}
+String atribution(): {String code="",id="";String[] ex;}
 {
-  (    <IDENTIFIER> {code+=token.image;}
+  (    <IDENTIFIER> {code+=token.image;id=token.image;}
  	<ASSIGN> {code+=token.image;}
- 	ex = primaryExpression() {code += ex;}
+ 	ex = primaryExpression() {code += ex[0];}
  	<SEMICOLON> {code += ";\n";}
   )
   {
-	//checkVariable
+	String idType = checkVariableAndReturnType(id);
+	String exType = ex[1];
+	if(idType!=exType && exType!="function") {
+	 throw new ParseException("Tentou atribuir um valor do tipo " + exType + " para a variavel de nome " + id + " que foi declarada como sendo do tipo " + idType);
+	}
 	return code;
   }	
 }
 
-String printStatement(): {String code="",ex="";} {
+String printStatement(): {String code="";String[] ex;} {
 	(
 	<PRINT> {code+="print";}
 	<LEFT_PAREN> {code+=token.image;}
-	ex = primaryExpression() {code+=ex;}
+	ex = primaryExpression() {code+=ex[0];}
 	<RIGHT_PAREN> {code+=token.image;}
 	<SEMICOLON> {code += ";\n";}
 	) {return code;}
@@ -294,12 +306,12 @@ String condition():{String code="",block="",boo="",blockElse="";}{
 <LEFT_PAREN> {code+=token.image;}
 boo = booleanExpression() {code+=boo;}
 <RIGHT_PAREN> {code+=token.image;}
-<LEFT_BRACE> {code+=token.image+"\n ";}
+<LEFT_BRACE> {code+=token.image+"\n";}
 block=codeBlock() {code+=block;}
 <RIGHT_BRACE> {code+=token.image+"\n";}
 (
   <ELSESYMBOL> {code+=token.image;}
-  <LEFT_BRACE> {code+=token.image+"\n ";}
+  <LEFT_BRACE> {code+=token.image+"\n";}
 	blockElse=codeBlock() {code+=blockElse;}
 	<RIGHT_BRACE> {code+=token.image+"\n";})?
 ) {return code;}
@@ -322,7 +334,7 @@ String whileLoop(): {String code="",block="",boo="",blockElse="";} {
 <LEFT_PAREN> {code+=token.image;}
 boo = booleanExpression() {code+=boo;}
 <RIGHT_PAREN> {code+=token.image;}
-<LEFT_BRACE> {code+=token.image+"\n ";}
+<LEFT_BRACE> {code+=token.image+"\n";}
 block=codeBlock() {code+=block;}
 <RIGHT_BRACE> {code+=token.image+"\n";}
 ) {return code;}
