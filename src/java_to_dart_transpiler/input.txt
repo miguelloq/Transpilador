@@ -5,7 +5,9 @@ String stringAleatoria = "abc";
 
 if(true){
 	String nome="Miguel";
+	int input = newScanner(System.in).nextInt();
 	while(false || 2>1){
 		nome="Savio";
 	}
+	System.out.println(2);
 }

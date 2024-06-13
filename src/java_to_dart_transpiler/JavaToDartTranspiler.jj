@@ -9,6 +9,7 @@ package java_to_dart_transpiler;
 import java.io.*;
 import java.util.*;
 
+
 public class JavaToDartTranspiler {
   public static void main(String[] args) throws Exception {
     String caminhoDoArquivo = "input.txt";
@@ -22,7 +23,12 @@ public class JavaToDartTranspiler {
 			StringReader stringReader = new StringReader(inputString);
 			JavaToDartTranspiler parser = new JavaToDartTranspiler(stringReader);
 			String result=parser.codeBlock();
-			System.out.println(result);   		
+			
+            System.out.println(result);
+            BufferedWriter writer =  new BufferedWriter(new FileWriter("src/java_to_dart_transpiler/output.txt")); 
+            writer.write(result);
+            writer.close();
+            	
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -64,7 +70,9 @@ SKIP :
 
 TOKEN :
 {
-  < IFSYMBOL : "if" >
+<READ : "newScanner(System.in).nextInt()">
+| < PRINT : "System.out.println">
+| < IFSYMBOL : "if" >
 | < ELSESYMBOL : "else" >
 | < FORSYMBOL : "for" >
 | < WHILESYMBOL : "while" >
@@ -200,15 +208,28 @@ String stringExpression(): {String code="";} {
     {return code;}
 }
 
+String functionExpression(): {String code="";} {
+(
+ <READ> {code+="stdin.readLineSync()";})
+
+{ return code;}
+}
 
 String primaryExpression():
-{String code="",ex="";}
+{String code="",ex="";
+boolean isId =false;
+}
 {
  (   ex = algebricExpression(){code=ex;}
 | ex = booleanExpression() {code=ex;}
 | ex = stringExpression() {code=ex;}
-| <IDENTIFIER> {throw new ParseException("Ba meu errou");}
-) {return code;}
+| ex = functionExpression() {code=ex;}
+| <IDENTIFIER> {ex=token.image;code=ex;isId=true;}
+) {
+  if(isId) {
+	checkVariable(ex);
+  } 
+  return code;}
 }
 
 String declaration():
@@ -236,9 +257,19 @@ String atribution(): {String code="",ex="";}
  	<SEMICOLON> {code += ";\n";}
   )
   {
-	checkVariable
+	//checkVariable
 	return code;
   }	
+}
+
+String printStatement(): {String code="",ex="";} {
+	(
+	<PRINT> {code+="print";}
+	<LEFT_PAREN> {code+=token.image;}
+	ex = primaryExpression() {code+=ex;}
+	<RIGHT_PAREN> {code+=token.image;}
+	<SEMICOLON> {code += ";\n";}
+	) {return code;}
 }
 
 String statement():
@@ -249,6 +280,7 @@ String statement():
 | v = condition() {code=v;}
 |  v = whileLoop() {code=v;}
 | v = atribution() {code=v;}
+|  v = printStatement() {code=v;}
 ) {return code;}
 }
 

@@ -5,6 +5,7 @@ package java_to_dart_transpiler;
 import java.io.*;
 import java.util.*;
 
+
 public class JavaToDartTranspiler implements JavaToDartTranspilerConstants {
   public static void main(String[] args) throws Exception {
     String caminhoDoArquivo = "input.txt";
@@ -18,7 +19,12 @@ public class JavaToDartTranspiler implements JavaToDartTranspilerConstants {
                         StringReader stringReader = new StringReader(inputString);
                         JavaToDartTranspiler parser = new JavaToDartTranspiler(stringReader);
                         String result=parser.codeBlock();
-                        System.out.println(result);
+
+            System.out.println(result);
+            BufferedWriter writer =  new BufferedWriter(new FileWriter("src/java_to_dart_transpiler/output.txt"));
+            writer.write(result);
+            writer.close();
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -362,10 +368,24 @@ code += token.image;
     }
 }
 
+  static final public String functionExpression() throws ParseException {
+    trace_call("functionExpression");
+    try {
+String code="";
+      jj_consume_token(READ);
+code+="stdin.readLineSync()";
+{if ("" != null) return code;}
+    throw new Error("Missing return statement in function");
+    } finally {
+      trace_return("functionExpression");
+    }
+}
+
   static final public String primaryExpression() throws ParseException {
     trace_call("primaryExpression");
     try {
 String code="",ex="";
+boolean isId =false;
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case INTEGER_LITERAL:{
         ex = algebricExpression();
@@ -383,9 +403,14 @@ code=ex;
 code=ex;
         break;
         }
+      case READ:{
+        ex = functionExpression();
+code=ex;
+        break;
+        }
       case IDENTIFIER:{
         jj_consume_token(IDENTIFIER);
-{if (true) throw new ParseException("Ba meu errou");}
+ex=token.image;code=ex;isId=true;
         break;
         }
       default:
@@ -393,7 +418,10 @@ code=ex;
         jj_consume_token(-1);
         throw new ParseException();
       }
-{if ("" != null) return code;}
+if(isId) {
+        checkVariable(ex);
+  }
+  {if ("" != null) return code;}
     throw new Error("Missing return statement in function");
     } finally {
       trace_return("primaryExpression");
@@ -434,10 +462,33 @@ code+=token.image;
       ex = primaryExpression();
 code += ex;
       jj_consume_token(SEMICOLON);
-code += ";\n"; {if ("" != null) return code;}
+code += ";\n";
+//checkVariable
+        {if ("" != null) return code;}
     throw new Error("Missing return statement in function");
     } finally {
       trace_return("atribution");
+    }
+}
+
+  static final public String printStatement() throws ParseException {
+    trace_call("printStatement");
+    try {
+String code="",ex="";
+      jj_consume_token(PRINT);
+code+="print";
+      jj_consume_token(LEFT_PAREN);
+code+=token.image;
+      ex = primaryExpression();
+code+=ex;
+      jj_consume_token(RIGHT_PAREN);
+code+=token.image;
+      jj_consume_token(SEMICOLON);
+code += ";\n";
+{if ("" != null) return code;}
+    throw new Error("Missing return statement in function");
+    } finally {
+      trace_return("printStatement");
     }
 }
 
@@ -468,6 +519,11 @@ code=v;
 code=v;
         break;
         }
+      case PRINT:{
+        v = printStatement();
+code=v;
+        break;
+        }
       default:
         jj_la1[11] = jj_gen;
         jj_consume_token(-1);
@@ -487,6 +543,7 @@ String code="",stats="";
       label_5:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+        case PRINT:
         case IFSYMBOL:
         case WHILESYMBOL:
         case INTSYMBOL:
@@ -605,10 +662,10 @@ code+=token.image+"\n";
 	   jj_la1_init_1();
 	}
 	private static void jj_la1_init_0() {
-	   jj_la1_0 = new int[] {0x3800,0x1f800000,0x1f0000,0x600000,0x1f800000,0xc000,0xc000,0x600000,0x1f0000,0x10000,0xc000,0x3920,0x3920,0x40,};
+	   jj_la1_0 = new int[] {0xe000,0x7e000000,0x7c0000,0x1800000,0x7e000000,0x30000,0x30000,0x1800000,0x7c0000,0x40000,0x30020,0xe4c0,0xe4c0,0x100,};
 	}
 	private static void jj_la1_init_1() {
-	   jj_la1_1 = new int[] {0x0,0x0,0x0,0x0,0x0,0x40,0x0,0x0,0x0,0x0,0xe0,0x20,0x20,0x0,};
+	   jj_la1_1 = new int[] {0x0,0x0,0x0,0x0,0x0,0x100,0x0,0x0,0x0,0x0,0x380,0x80,0x80,0x0,};
 	}
 
   {
@@ -759,7 +816,7 @@ code+=token.image+"\n";
   /** Generate ParseException. */
   static public ParseException generateParseException() {
 	 jj_expentries.clear();
-	 boolean[] la1tokens = new boolean[40];
+	 boolean[] la1tokens = new boolean[42];
 	 if (jj_kind >= 0) {
 	   la1tokens[jj_kind] = true;
 	   jj_kind = -1;
@@ -776,7 +833,7 @@ code+=token.image+"\n";
 		 }
 	   }
 	 }
-	 for (int i = 0; i < 40; i++) {
+	 for (int i = 0; i < 42; i++) {
 	   if (la1tokens[i]) {
 		 jj_expentry = new int[1];
 		 jj_expentry[0] = i;
@@ -845,5 +902,13 @@ code+=token.image+"\n";
 	   System.out.println(" at line " + t1.beginLine + " column " + t1.beginColumn + ">; Expected token: <" + tokenImage[t2] + ">");
 	 }
   }
+
+//  public changeVariable(String type,String identifier) throws ParseException {
+//	checkVariable(identifier);
+//	String typeName = symbolTable.get(identifier);
+//	if(typeName!=type) {
+//		throw new ParseException("Variavel " + identifier + " nao foi declarada.");
+//	}
+// }
 
 }

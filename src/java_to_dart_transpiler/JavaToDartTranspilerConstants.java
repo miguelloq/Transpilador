@@ -11,75 +11,79 @@ public interface JavaToDartTranspilerConstants {
   /** End of File. */
   int EOF = 0;
   /** RegularExpression Id. */
-  int IFSYMBOL = 5;
+  int READ = 5;
   /** RegularExpression Id. */
-  int ELSESYMBOL = 6;
+  int PRINT = 6;
   /** RegularExpression Id. */
-  int FORSYMBOL = 7;
+  int IFSYMBOL = 7;
   /** RegularExpression Id. */
-  int WHILESYMBOL = 8;
+  int ELSESYMBOL = 8;
   /** RegularExpression Id. */
-  int RETURNSYMBOL = 9;
+  int FORSYMBOL = 9;
   /** RegularExpression Id. */
-  int VOIDSYMBOL = 10;
+  int WHILESYMBOL = 10;
   /** RegularExpression Id. */
-  int INTSYMBOL = 11;
+  int RETURNSYMBOL = 11;
   /** RegularExpression Id. */
-  int STRINGSYMBOL = 12;
+  int VOIDSYMBOL = 12;
   /** RegularExpression Id. */
-  int BOOLEAN = 13;
+  int INTSYMBOL = 13;
   /** RegularExpression Id. */
-  int TRUE = 14;
+  int STRINGSYMBOL = 14;
   /** RegularExpression Id. */
-  int FALSE = 15;
+  int BOOLEAN = 15;
   /** RegularExpression Id. */
-  int PLUS = 16;
+  int TRUE = 16;
   /** RegularExpression Id. */
-  int MINUS = 17;
+  int FALSE = 17;
   /** RegularExpression Id. */
-  int MULTIPLY = 18;
+  int PLUS = 18;
   /** RegularExpression Id. */
-  int DIVIDE = 19;
+  int MINUS = 19;
   /** RegularExpression Id. */
-  int MODULO = 20;
+  int MULTIPLY = 20;
   /** RegularExpression Id. */
-  int AND = 21;
+  int DIVIDE = 21;
   /** RegularExpression Id. */
-  int OR = 22;
+  int MODULO = 22;
   /** RegularExpression Id. */
-  int EQUALS = 23;
+  int AND = 23;
   /** RegularExpression Id. */
-  int NOT_EQUALS = 24;
+  int OR = 24;
   /** RegularExpression Id. */
-  int LESS_THAN = 25;
+  int EQUALS = 25;
   /** RegularExpression Id. */
-  int LESS_THAN_EQUALS = 26;
+  int NOT_EQUALS = 26;
   /** RegularExpression Id. */
-  int GREATER_THAN = 27;
+  int LESS_THAN = 27;
   /** RegularExpression Id. */
-  int GREATER_THAN_EQUALS = 28;
+  int LESS_THAN_EQUALS = 28;
   /** RegularExpression Id. */
-  int ASSIGN = 29;
+  int GREATER_THAN = 29;
   /** RegularExpression Id. */
-  int SEMICOLON = 30;
+  int GREATER_THAN_EQUALS = 30;
   /** RegularExpression Id. */
-  int LEFT_BRACE = 31;
+  int ASSIGN = 31;
   /** RegularExpression Id. */
-  int RIGHT_BRACE = 32;
+  int SEMICOLON = 32;
   /** RegularExpression Id. */
-  int LEFT_PAREN = 33;
+  int LEFT_BRACE = 33;
   /** RegularExpression Id. */
-  int RIGHT_PAREN = 34;
+  int RIGHT_BRACE = 34;
   /** RegularExpression Id. */
-  int LEFT_BRACKET = 35;
+  int LEFT_PAREN = 35;
   /** RegularExpression Id. */
-  int RIGHT_BRACKET = 36;
+  int RIGHT_PAREN = 36;
   /** RegularExpression Id. */
-  int IDENTIFIER = 37;
+  int LEFT_BRACKET = 37;
   /** RegularExpression Id. */
-  int INTEGER_LITERAL = 38;
+  int RIGHT_BRACKET = 38;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 39;
+  int IDENTIFIER = 39;
+  /** RegularExpression Id. */
+  int INTEGER_LITERAL = 40;
+  /** RegularExpression Id. */
+  int STRING_LITERAL = 41;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -91,6 +95,8 @@ public interface JavaToDartTranspilerConstants {
     "\"\\t\"",
     "\"\\r\"",
     "\"\\n\"",
+    "\"newScanner(System.in).nextInt()\"",
+    "\"System.out.println\"",
     "\"if\"",
     "\"else\"",
     "\"for\"",
